@@ -5,6 +5,25 @@ project(SimuCollision)
 # Set the folder where the executables are created
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
+# include c3ga
+message(STATUS "c3ga garamon cmake part ..." )
+add_subdirectory(lib/garamon_c3ga INTERFACE)
+include_directories(${CMAKE_SOURCE_DIR}/lib/garamon_c3ga/src/)
+
+# set the module path for "findLib.cmake"
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules/")
+
+# include eigen
+find_package(Eigen3)
+if(${EIGEN3_FOUND})
+    message(STATUS "lib EIGEN3 found")
+    message(STATUS "  version " ${EIGEN3_VERSION_STRING})
+    message(STATUS "  include " ${EIGEN3_INCLUDE_DIR})
+else()
+    message(STATUS "lib EIGEN3 manually included")
+    include_directories("E:\\Universite\\M2\\geo_proj\\SimuCollision\\lib\\garamon_c3ga\\include\\eigen3") # manually specify the include location
+endif()
+
 # Include glimac
 add_subdirectory(glimac)
 

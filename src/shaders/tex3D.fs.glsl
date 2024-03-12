@@ -7,9 +7,10 @@ in vec2 vTexCoords; // Coordonnées de texture du sommet
 out vec3 fFragColor;
 
 uniform sampler2D uTexture0;
+uniform float uVisibilityFactor;
 
 
 void main() {
-    vec4 planetaryTex = texture(uTexture0, vTexCoords);
+    vec4 planetaryTex = texture(uTexture0, vTexCoords) * uVisibilityFactor;
     fFragColor = vec3(planetaryTex.x, planetaryTex.y, planetaryTex.z);
 }

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <set>
 
 #include "camera.hpp"
 #include "planets.hpp"
@@ -57,6 +58,9 @@ std::vector<Model> createModels(bool lowConfig);
 */
 GLuint* getDataOfModels(std::vector<Model> models, int type);
 
+/**Create the initial planet vector.*/
+std::vector<Planet> createPlanets(int nb, double actualTime);
+
 /** Draw every objects of the solar system (function for the MAIN LOOP)
  * @param star program structure of the sun
  * @param planet program structure of planets
@@ -66,5 +70,11 @@ GLuint* getDataOfModels(std::vector<Model> models, int type);
  * @param models vector containing every models (sphere, circle, ...)
  * @param matrix vector containing the ProjMatrix, globalMVMatrix and viewMatrix
 */
-void drawEverything(StarProgram* star, PlanetProgram* planet, ClassicProgram* classicObj, PlanetInfo info,
+void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetProgram* planet, /*ClassicProgram* classicObj,*/ Info info,
     std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix);
+
+/**Update every planets parameters*/
+void updateEverything(std::vector<Planet>* planets, Info info);
+
+/**Update the visibility of planets*/
+void updateVisibility(std::vector<Planet>* planets, Info info);

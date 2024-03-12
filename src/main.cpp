@@ -5,15 +5,17 @@ int window_width = 1000;
 int window_height = 1000;
 
 Camera camera(0); // 0=trackball, 1=freefly
-int INITIAL_DISTANCE = 3000; // initial distance of camera
-float PERSPEC_FAR = 100000.0f; // max distance for objects rendering, compared to the camera
+int INITIAL_DISTANCE = 120; // initial distance of camera
+float PERSPEC_FAR = 10000.0f; // max distance for objects rendering, compared to the camera
 bool lowConfig = false; // set this to true if you have a bad pc and needs the models to be less detailed
 
+int NB_PLANETS = 10; // initial number of planets
+
 /* Main fonction of the engine */
-void visusyssol(GLFWwindow* window, glimac::FilePath applicationPath);
+void simucollision(GLFWwindow* window, glimac::FilePath applicationPath);
 
 /* Main structure containing every planets data */
-PlanetInfo planetInfo;
+Info info;
 
 
 // ============================================================
@@ -26,16 +28,16 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
             case GLFW_KEY_P: glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); break;
             case GLFW_KEY_L: glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
             case GLFW_KEY_F: glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
-            case GLFW_KEY_O: planetInfo.modifyDrawOrbit(); break;
-            case GLFW_KEY_V: planetInfo.modifyChosenView(); break;
+            case GLFW_KEY_O: info.modifyDrawHitbox(); break;
+            // case GLFW_KEY_V: planetInfo.modifyChosenView(); break;
             case GLFW_KEY_W: camera.moveFront(-1.0); break;
             case GLFW_KEY_A: camera.moveLeft(1.0); break;
             case GLFW_KEY_S: camera.moveFront(1.0); break;
             case GLFW_KEY_D: camera.moveLeft(-1.0); break;
             case GLFW_KEY_T: camera.switchType(); break;
-            case GLFW_KEY_KP_SUBTRACT: planetInfo.modifySpeed(-100.0); break;
-            case GLFW_KEY_KP_ADD: planetInfo.modifySpeed(100.0); break;
-            case GLFW_KEY_SPACE: planetInfo.pauseTime(); break;
+            case GLFW_KEY_KP_SUBTRACT: info.modifySpeed(-100.0); break;
+            case GLFW_KEY_KP_ADD: info.modifySpeed(100.0); break;
+            case GLFW_KEY_SPACE: info.pauseTime(); break;
             case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, 1); break;
             default: break;
         }
@@ -108,20 +110,22 @@ int main(int argc, char** argv) {
 
     /* Launch engine */
     glimac::FilePath applicationPath(argv[0]);
-    visusyssol(window, applicationPath);
+    simucollision(window, applicationPath);
     
     glfwTerminate();
     return 0;
 }
 
 
-void visusyssol(GLFWwindow* window, glimac::FilePath applicationPath) {
-    ClassicProgram classicObj(applicationPath);
-    StarProgram star(applicationPath);
-    PlanetProgram planet(applicationPath);
+void simucollision(GLFWwindow* window, glimac::FilePath applicationPath) {
+    // ClassicProgram classicObj(applicationPath);
+    // StarProgram star(applicationPath);
+    PlanetProgram program(applicationPath);
     
     std::vector<GLuint> textureObjects = createTextureObjects(applicationPath.dirPath());
     std::vector<Model> models = createModels(lowConfig);
+    std::vector<Planet> planets = createPlanets(NB_PLANETS, info.getTime());
+    unsigned int loopIdx = 0;
 
     while (!glfwWindowShouldClose(window)) { // main loop
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -132,7 +136,12 @@ void visusyssol(GLFWwindow* window, glimac::FilePath applicationPath) {
         matrix[2] = camera.getViewMatrix();
         matrix[1] = camera.getGlobalMVMatrix(modelMatrix);
 
-        drawEverything(&star, &planet, &classicObj, planetInfo, textureObjects, models, matrix); // main engine func
+        drawEverything(planets, &program, info, textureObjects, models, matrix); // main engine func
+        if(loopIdx % info.getUpdateRate() == 0) updateVisibility(&planets, info);
+        if(!info.isPaused() && loopIdx % info.getUpdateRate() == 0) {
+            updateEverything(&planets, info);
+            loopIdx = 0;
+        }
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -140,6 +149,7 @@ void visusyssol(GLFWwindow* window, glimac::FilePath applicationPath) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glfwSwapBuffers(window); // Update the display
         glfwPollEvents(); // Poll for and process events
+        loopIdx++;
     }
 
     glDeleteTextures(textureObjects.size(), textureObjects.data());

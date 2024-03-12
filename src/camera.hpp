@@ -10,7 +10,7 @@
 /* Structure to manage the camera */
 struct Camera {
     int CAMERA_TYPE; // 0=trackball, 1=freefly
-    float MOVE_SPEED = 120.0; // zoom, moveFront/Left speed of the camera
+    float MOVE_SPEED = 4.0; // zoom, moveFront/Left speed of the camera
     float ROTATION_SPEED = 2.0; // rotation, rotateLeft/Up speed of the camera
     glimac::TrackballCamera trackballCamera;
     glimac::FreeflyCamera freeflyCamera;
