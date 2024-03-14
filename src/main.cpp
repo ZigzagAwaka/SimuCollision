@@ -9,7 +9,7 @@ int INITIAL_DISTANCE = 120; // initial distance of camera
 float PERSPEC_FAR = 10000.0f; // max distance for objects rendering, compared to the camera
 bool lowConfig = false; // set this to true if you have a bad pc and needs the models to be less detailed
 
-int NB_PLANETS = 10; // initial number of planets
+int NB_PLANETS = 6; // initial number of planets
 
 /* Main fonction of the engine */
 void simucollision(GLFWwindow* window, glimac::FilePath applicationPath);
@@ -124,7 +124,7 @@ void simucollision(GLFWwindow* window, glimac::FilePath applicationPath) {
     
     std::vector<GLuint> textureObjects = createTextureObjects(applicationPath.dirPath());
     std::vector<Model> models = createModels(lowConfig);
-    std::vector<Planet> planets = createPlanets(NB_PLANETS, info.getTime());
+    std::vector<Planet> planets = createAllPlanets(NB_PLANETS, info.getTime());
     unsigned int loopIdx = 0;
 
     while (!glfwWindowShouldClose(window)) { // main loop

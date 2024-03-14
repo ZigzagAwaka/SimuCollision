@@ -59,7 +59,7 @@ std::vector<Model> createModels(bool lowConfig);
 GLuint* getDataOfModels(std::vector<Model> models, int type);
 
 /**Create the initial planet vector.*/
-std::vector<Planet> createPlanets(int nb, double actualTime);
+std::vector<Planet> createAllPlanets(int nb, double actualTime);
 
 /** Draw every objects of the solar system (function for the MAIN LOOP)
  * @param star program structure of the sun

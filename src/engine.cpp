@@ -101,16 +101,17 @@ GLuint* getDataOfModels(std::vector<Model> models, int type) {
 }
 
 
-std::vector<Planet> createPlanets(int nb, double actualTime) {
+/**Create one planet from the parameters, if given, or else select random parameters*/
+Planet createPlanet(double actualTime, int size = Planet::selectSize(), glm::vec3 position = Planet::selectPosition(),
+                    int textureIdx = Planet::selectTextureIdx(), float obliquity = Planet::selectObliquity(),
+                    float rotationSpeed = Planet::selectRotationSpeed(), glm::vec3 inclination = Planet::selectInclination()) {
+    return Planet(textureIdx, size, position, obliquity, rotationSpeed, inclination, actualTime);
+}
+
+std::vector<Planet> createAllPlanets(int nb, double actualTime) {
     std::vector<Planet> planets;
     for(int n=0; n<nb; n++) {
-        int t = Planet::selectTextureIdx();
-        int s = Planet::selectSize();
-        glm::vec3 p = Planet::selectPosition();
-        float o = Planet::selectObliquity();
-        float rs = Planet::selectRotationSpeed();
-        glm::vec3 i = Planet::selectInclination();
-        planets.push_back(Planet(t, s, p, o, rs, i, actualTime));
+        planets.push_back(createPlanet(actualTime));
     }
     return planets;
 }
@@ -289,11 +290,11 @@ void updateEverything(std::vector<Planet>* planets, Info info) {
     for(size_t i=0; i<planets->size(); i++) {
         Planet& planet = planets->operator[](i);
         // MOVEMENT
-        if(glm::length(planet.position) > float(Planet::distanceMax)) {
+        if(glm::length(planet.position) > float(Planet::distanceMax)) { // hitbox
             planet.direction = -1.0f * planet.direction;
             planet.inclination = -1.0f * planet.inclination;
         }
-        else if(planet.dirUpdateNb % Planet::dirUpdateRate == 0) {
+        else if(planet.dirUpdateNb % Planet::dirUpdateRate == 0) { // chance of changing direction
             planet.direction = glm::normalize(glm::sphericalRand(1.0f));
             planet.dirUpdateNb = 0;
         }
@@ -305,27 +306,35 @@ void updateEverything(std::vector<Planet>* planets, Info info) {
             if(i == j || collideSet.find(j) != collideSet.end()) continue;
             Planet& other = planets->operator[](j);
             if(!other.hasLoaded) continue;
-            if(planet.hasCollided(other)) {
+            if(planet.hasCollided(other)) { // collision detected
                 std::cout << "Collision! (" << i << ", " << j << ")" << std::endl;
-                collideSet.insert(i);
-                collideSet.insert(j);
+                if((planet.size > Planet::minC && other.size > Planet::minC) || (planet.size <= Planet::minC && other.size <= Planet::minC)) {
+                    collideSet.insert(i);
+                    collideSet.insert(j); }
+                else collideSet.insert((planet.size <= Planet::minC ? i : j));
+                // planets->operator[]((destroyed == i) ? j : i).size *= 1.5;
             }
         }
     }
     // COLLISION RESULT
-    bool b = false;
+    int nbC = 0; int sizeC = 0; glm::vec3 posC;
     for(auto i = collideSet.rbegin(); i != collideSet.rend(); i++) {
-        b = true;
-        planets->erase(planets->begin() + *i);
+        auto planet = planets->begin() + *i; // get collided planet
+        if(planet->size > Planet::minC) {
+            if(planet->size > sizeC) sizeC = planet->size;
+            posC = planet->position; nbC++; }
+        planets->erase(planet);
+        if(nbC == 2) { // create new planets (exploding fragments)
+            float s = float(sizeC) / 2.0;
+            nbC = 0; sizeC = 0;
+            if(s < Planet::minC) continue; // only accept not too small planets
+            int NB = Planet::selectExplodingFragments();
+            for(int n=0; n<NB; n++) {
+                planets->push_back(createPlanet(info.getTime(), s, posC));
+            }
+        }
     }
-    if(b){
-    int t = Planet::selectTextureIdx();
-    int s = Planet::selectSize();
-    glm::vec3 p = Planet::selectPosition();
-    float o = Planet::selectObliquity();
-    float rs = Planet::selectRotationSpeed();
-    glm::vec3 i = Planet::selectInclination();
-    planets->push_back(Planet(t, s, p, o, rs, i, info.getTime()));}
+
 }
 
 

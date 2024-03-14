@@ -20,7 +20,7 @@
 struct Planet {
     public:
     int textureIdx; // texture
-    float size; // diameter
+    float size; // radius
     glm::vec3 position; // x y z
     float obliquity; // rotation of planet axis
     float rotationSpeed; // speed of orbital rotation
@@ -36,6 +36,7 @@ struct Planet {
     static const int dirUpdateRate = 500; // maximum value for dirUpdateNb
     static const int ringSize = 5; // rings global size
     static const int distanceMax = 100; // maximum distance of planets to the center
+    static constexpr float minC = 1.5; // minimum possible size of exploding fragments when collision
 
     Planet(int t, float s, glm::vec3 p, float o, float rs, glm::vec3 i, double ti) :
         textureIdx{t}, size{s}, position{p}, obliquity{o}, rotationSpeed{rs}, inclination{i}, spawnTime{ti} {
@@ -90,7 +91,7 @@ struct Planet {
     }
 
     static float selectSize() {
-        int sizeMin = 3;
+        int sizeMin = int(Planet::minC * 4.0); // THIS VALUE NEEDS TO ALWAYS BE Planet::minC * 4 !!
         int sizeMax = 15;
         return selectRandomFloat(sizeMin, sizeMax);
     }
@@ -122,6 +123,12 @@ struct Planet {
         glm::vec4 res = glm::rotate(glm::mat4(1.0), glm::radians(inc), glm::vec3(1, 0, 0))
                         * glm::vec4(glm::vec3(0, 1, 0), 0.0);
         return glm::vec3(glm::normalize(res));
+    }
+
+    static int selectExplodingFragments() {
+        int nbFragsMin = 4;
+        int nbFragsMax = 6;
+        return selectRandomInt(nbFragsMin, nbFragsMax);
     }
 
     private:
