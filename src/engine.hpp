@@ -74,7 +74,7 @@ void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetPro
     std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix);
 
 /**Update every planets parameters*/
-void updateEverything(std::vector<Planet>* planets, Info info);
+void updateEverything(std::vector<Planet>* planets, Info* info);
 
 /**Update the visibility of planets*/
 void updateVisibility(std::vector<Planet>* planets, Info info);

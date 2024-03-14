@@ -37,6 +37,8 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
             case GLFW_KEY_T: camera.switchType(); break;
             case GLFW_KEY_KP_SUBTRACT: info.modifySpeed(-100.0); break;
             case GLFW_KEY_KP_ADD: info.modifySpeed(100.0); break;
+            case GLFW_KEY_KP_0: info.modifySpecialSpawn(); break;
+            case GLFW_KEY_KP_1: info.modifySpecialClean(); break;
             case GLFW_KEY_SPACE: info.pauseTime(); break;
             case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, 1); break;
             default: break;
@@ -107,6 +109,7 @@ int main(int argc, char** argv) {
     glEnable(GL_DEPTH_TEST);
     std::cout << "Launching... " << argc << " " << argv << std::endl;
     std::cout << "OpenGL Version : " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "Initial number of planets = " << NB_PLANETS << "." << std::endl;
 
     /* Launch engine */
     glimac::FilePath applicationPath(argv[0]);
@@ -139,7 +142,7 @@ void simucollision(GLFWwindow* window, glimac::FilePath applicationPath) {
         drawEverything(planets, &program, info, textureObjects, models, matrix); // main engine func
         if(loopIdx % info.getUpdateRate() == 0) updateVisibility(&planets, info);
         if(!info.isPaused() && loopIdx % info.getUpdateRate() == 0) {
-            updateEverything(&planets, info);
+            updateEverything(&planets, &info);
             loopIdx = 0;
         }
         

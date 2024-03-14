@@ -197,6 +197,8 @@ struct Info {
     double time_memory = 0.0; // time of the simulation, if paused
     bool time_pause = false; // flag to know if the time is paused
     bool draw_hitbox = false; // indicator to draw orbit of planets
+    bool special_spawn = false;
+    bool special_clean = false;
     // glm::vec3 ecliptic = glm::vec3(0, 1, 0); // rotation axis of earth
     // OrbitIndexs oi; // indexes in orbit
 
@@ -363,6 +365,26 @@ struct Info {
     /*inverse the draw_orbit flag*/
     void modifyDrawHitbox() {
         draw_hitbox = !draw_hitbox;
+    }
+
+    /*to know if we have to activate the special spawn*/
+    bool specialSpawn() {
+        return special_spawn;
+    }
+
+    /*inverse the special_spawn flag*/
+    void modifySpecialSpawn() {
+        special_spawn = !special_spawn;
+    }
+
+    /*to know if we have to activate the special clean*/
+    bool specialClean() {
+        return special_clean;
+    }
+
+    /*inverse the special_clean flag*/
+    void modifySpecialClean() {
+        special_clean = !special_clean;
     }
 
     /*return the actual chosen view of the drawing*/

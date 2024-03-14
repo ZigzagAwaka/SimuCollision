@@ -285,7 +285,7 @@ void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetPro
 // UPDATE FUNCTIONS
 // ============================================================
 
-void updateEverything(std::vector<Planet>* planets, Info info) {
+void updateEverything(std::vector<Planet>* planets, Info* info) {
     std::set<int> collideSet;
     for(size_t i=0; i<planets->size(); i++) {
         Planet& planet = planets->operator[](i);
@@ -330,11 +330,21 @@ void updateEverything(std::vector<Planet>* planets, Info info) {
             if(s < Planet::minC) continue; // only accept not too small planets
             int NB = Planet::selectExplodingFragments();
             for(int n=0; n<NB; n++) {
-                planets->push_back(createPlanet(info.getTime(), s, posC));
+                planets->push_back(createPlanet(info->getTime(), s, posC));
             }
         }
     }
-
+    // SPECIAL EVENTS
+    if(info->specialSpawn()) { // spawn a new planet
+        std::cout << "Spawning a new planet!" << std::endl;
+        planets->push_back(createPlanet(info->getTime()));
+        info->modifySpecialSpawn(); }
+    if(info->specialClean()) { // delete all small planets
+        std::cout << "Deleting all small planets." << std::endl;
+        planets->erase(std::remove_if(planets->begin(), planets->end(),
+            [](const Planet& p) {return p.size <= Planet::minC;}), planets->end());
+        info->modifySpecialClean();
+    }
 }
 
 
