@@ -28,7 +28,7 @@ struct Planet {
     glm::vec3 direction; // where to go
     double spawnTime; // time of spawn
     double durationOfLoad = 0.0; // actual time since spawn
-    const double loadPeriod = 2.0; // total time of the loading phase
+    const double loadPeriod = 1.5; // total time of the loading phase
     bool hasLoaded = false; // to know if the planet is ready to collide
     float visibility = 1.0; // visual factor
     float visibilityOp = -0.1; // visual operation
@@ -37,6 +37,8 @@ struct Planet {
     static const int ringSize = 5; // rings global size
     static const int distanceMax = 100; // maximum distance of planets to the center
     static constexpr float minC = 1.5; // minimum possible size of exploding fragments when collision
+    static constexpr float explosionSpeed = 0.4; // speed of explosion particles
+    static constexpr float explosionMinSize = 0.3; // minimum possible size of explosion particles
 
     Planet(int t, float s, glm::vec3 p, float o, float rs, glm::vec3 i, double ti) :
         textureIdx{t}, size{s}, position{p}, obliquity{o}, rotationSpeed{rs}, inclination{i}, spawnTime{ti} {
@@ -63,7 +65,7 @@ struct Planet {
     // ----- COLLISION DETECTION -----
 
     private:
-    c3ga::Mvec<double> computeSphereCGA() {
+    c3ga::Mvec<double> computeSphereCGA() const {
         c3ga::Mvec<double> pt1 = c3ga::point<double>(position.x + size, position.y, position.z);
         c3ga::Mvec<double> pt2 = c3ga::point<double>(position.x - size, position.y, position.z);
         c3ga::Mvec<double> pt3 = c3ga::point<double>(position.x, position.y + size, position.z);
@@ -72,7 +74,7 @@ struct Planet {
     }
 
     public:
-    bool hasCollided(Planet other) {
+    bool hasCollided(Planet other) const {
         auto sphere1 = computeSphereCGA();
         auto sphere2 = other.computeSphereCGA();
         auto circle_d = !sphere1 ^ !sphere2;
@@ -92,7 +94,7 @@ struct Planet {
 
     static float selectSize() {
         int sizeMin = int(Planet::minC * 4.0); // THIS VALUE NEEDS TO ALWAYS BE Planet::minC * 4 !!
-        int sizeMax = 15;
+        int sizeMax = 20;
         return selectRandomFloat(sizeMin, sizeMax);
     }
 
@@ -325,16 +327,16 @@ struct Info {
         f_speed = t;
     }
 
-    float getFactorSpeed() {
+    float getFactorSpeed() const {
         return f_speed;
     }
 
-    bool isPaused() {
+    bool isPaused() const {
         return time_pause;
     }
 
     /*get the rate at which update functions needs to be run*/
-    int getUpdateRate() {
+    int getUpdateRate() const {
         if(f_speed == 510.0) return 100;
         return int((100.0 * 510.0 / f_speed));
     }
@@ -352,13 +354,13 @@ struct Info {
     }
 
     /*get the time of the simulation*/
-    double getTime() {
+    double getTime() const {
         if(time_pause) return time_memory;
         return glfwGetTime();
     }
 
     /*to know if we have to draw the orbit or not*/
-    bool drawHitbox() {
+    bool drawHitbox() const {
         return draw_hitbox;
     }
 
@@ -368,7 +370,7 @@ struct Info {
     }
 
     /*to know if we have to activate the special spawn*/
-    bool specialSpawn() {
+    bool specialSpawn() const {
         return special_spawn;
     }
 
@@ -378,7 +380,7 @@ struct Info {
     }
 
     /*to know if we have to activate the special clean*/
-    bool specialClean() {
+    bool specialClean() const {
         return special_clean;
     }
 

@@ -116,6 +116,14 @@ std::vector<Planet> createAllPlanets(int nb, double actualTime) {
     return planets;
 }
 
+/**Add a new explosion in the explosions vector*/
+void addExplosion(std::vector<Planet>* explosions, double actualTime, int size, glm::vec3 position) {
+    int NB = Planet::selectExplodingFragments() * 2;
+    for(int n=0; n<NB; n++) {
+        explosions->push_back(createPlanet(actualTime, size, position, 37));
+    }
+}
+
 
 // ============================================================
 // OPENGL FUNCTIONS
@@ -224,6 +232,24 @@ void drawRing(Planet planet, PlanetProgram* program, Info info, std::vector<GLui
 //     glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
 // }
 
+// Draw the n.i asked explosion
+void drawExplosion(Planet explosion, PlanetProgram* program, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
+    glm::vec3 p = /*info.distance(i);*/ explosion.position;
+    float s = /*info.size(i);*/ explosion.size;
+    // float orb_speed = info.orbital_speed(i);
+    // float rot_speed = info.rotation_speed(i);
+    // glm::vec3 axis = info.inclination(i);
+    // float obli = info.obliquity(i);
+    // double time = info.getTime();
+    // bool mult = info.hasMultipleTex(i);
+    glm::mat4 explosionMVMatrix = matrix[1];
+    explosionMVMatrix = glm::translate(explosionMVMatrix, p);
+    explosionMVMatrix = glm::scale(explosionMVMatrix, glm::vec3(s, s, s));
+    prepareTextures(explosion.textureIdx, program->u, textures);
+    fillUniforms(program->u, explosionMVMatrix, matrix, 1.0);
+    glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
+}
+
 // Draw the n.i asked planet
 void drawPlanet(Planet planet, PlanetProgram* program, Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     glm::vec3 p = /*info.distance(i);*/ planet.position;
@@ -252,7 +278,7 @@ void drawPlanet(Planet planet, PlanetProgram* program, Info info, std::vector<GL
 }
 
 
-void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetProgram* program, /*ClassicProgram* classicObj,*/ Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
+void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* program, /*ClassicProgram* classicObj,*/ Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     // int view = info.chosenView(); // get chosen view
     program->m_Program.use();
     // if(info.drawOrbit()) {
@@ -277,6 +303,9 @@ void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetPro
     for(size_t i=0; i<planets.size(); i++) {
         drawPlanet(planets[i], program, info, textures, models, matrix);
     }
+    for(size_t i=0; i<explosions.size(); i++) {
+        drawExplosion(explosions[i], program, textures, models, matrix);
+    }
     glBindVertexArray(0);
 }
 
@@ -285,7 +314,7 @@ void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetPro
 // UPDATE FUNCTIONS
 // ============================================================
 
-void updateEverything(std::vector<Planet>* planets, Info* info) {
+void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosions, Info* info) {
     std::set<int> collideSet;
     for(size_t i=0; i<planets->size(); i++) {
         Planet& planet = planets->operator[](i);
@@ -325,6 +354,7 @@ void updateEverything(std::vector<Planet>* planets, Info* info) {
             posC = planet->position; nbC++; }
         planets->erase(planet);
         if(nbC == 2) { // create new planets (exploding fragments)
+            addExplosion(explosions, info->getTime(), sizeC, posC);
             float s = float(sizeC) / 2.0;
             nbC = 0; sizeC = 0;
             if(s < Planet::minC) continue; // only accept not too small planets
@@ -334,6 +364,15 @@ void updateEverything(std::vector<Planet>* planets, Info* info) {
             }
         }
     }
+    // EXPLOSION EFFECTS
+    bool fRem = false;
+    for(size_t i=0; i<explosions->size(); i++) {
+        explosions->operator[](i).position += explosions->operator[](i).direction * Planet::explosionSpeed;
+        explosions->operator[](i).size /= 1.05;
+        if(!fRem && explosions->operator[](i).size <= Planet::explosionMinSize) fRem = true;
+    }
+    if(fRem) explosions->erase(std::remove_if(explosions->begin(), explosions->end(),
+                [](const Planet& e) {return e.size <= Planet::explosionMinSize;}), explosions->end());
     // SPECIAL EVENTS
     if(info->specialSpawn()) { // spawn a new planet
         std::cout << "Spawning a new planet!" << std::endl;

@@ -70,11 +70,11 @@ std::vector<Planet> createAllPlanets(int nb, double actualTime);
  * @param models vector containing every models (sphere, circle, ...)
  * @param matrix vector containing the ProjMatrix, globalMVMatrix and viewMatrix
 */
-void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, PlanetProgram* planet, /*ClassicProgram* classicObj,*/ Info info,
+void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* planet, /*ClassicProgram* classicObj,*/ Info info,
     std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix);
 
 /**Update every planets parameters*/
-void updateEverything(std::vector<Planet>* planets, Info* info);
+void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosions, Info* info);
 
 /**Update the visibility of planets*/
 void updateVisibility(std::vector<Planet>* planets, Info info);
