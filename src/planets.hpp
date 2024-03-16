@@ -37,6 +37,7 @@ struct Planet {
     static const int ringSize = 5; // rings global size
     static const int distanceMax = 100; // maximum distance of planets to the center
     static constexpr float minC = 1.5; // minimum possible size of exploding fragments when collision
+    static constexpr float explosionRate = 1.07; // the rate at which explosion particles are getting smaller
     static constexpr float explosionSpeed = 0.4; // speed of explosion particles
     static constexpr float explosionMinSize = 0.3; // minimum possible size of explosion particles
 

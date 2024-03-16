@@ -118,7 +118,7 @@ std::vector<Planet> createAllPlanets(int nb, double actualTime) {
 
 /**Add a new explosion in the explosions vector*/
 void addExplosion(std::vector<Planet>* explosions, double actualTime, int size, glm::vec3 position) {
-    int NB = Planet::selectExplodingFragments() * 2;
+    int NB = Planet::selectExplodingFragments();
     for(int n=0; n<NB; n++) {
         explosions->push_back(createPlanet(actualTime, size, position, 37));
     }
@@ -352,9 +352,9 @@ void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosi
         if(planet->size > Planet::minC) {
             if(planet->size > sizeC) sizeC = planet->size;
             posC = planet->position; nbC++; }
+        addExplosion(explosions, info->getTime(), planet->size, planet->position);
         planets->erase(planet);
         if(nbC == 2) { // create new planets (exploding fragments)
-            addExplosion(explosions, info->getTime(), sizeC, posC);
             float s = float(sizeC) / 2.0;
             nbC = 0; sizeC = 0;
             if(s < Planet::minC) continue; // only accept not too small planets
@@ -366,9 +366,9 @@ void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosi
     }
     // EXPLOSION EFFECTS
     bool fRem = false;
-    for(size_t i=0; i<explosions->size(); i++) {
+    for(size_t i=0; i<explosions->size(); i++) { // explosion particles
         explosions->operator[](i).position += explosions->operator[](i).direction * Planet::explosionSpeed;
-        explosions->operator[](i).size /= 1.05;
+        explosions->operator[](i).size /= Planet::explosionRate;
         if(!fRem && explosions->operator[](i).size <= Planet::explosionMinSize) fRem = true;
     }
     if(fRem) explosions->erase(std::remove_if(explosions->begin(), explosions->end(),
