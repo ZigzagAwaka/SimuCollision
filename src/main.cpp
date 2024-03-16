@@ -14,7 +14,7 @@ int NB_PLANETS = 5; // initial number of planets
 /* Main fonction of the engine */
 void simucollision(GLFWwindow* window, glimac::FilePath applicationPath);
 
-/* Main structure containing every planets data */
+/* The Info class contains time and various data */
 Info info;
 
 
@@ -29,7 +29,6 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
             case GLFW_KEY_L: glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
             case GLFW_KEY_F: glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
             case GLFW_KEY_O: info.modifyDrawHitbox(); break;
-            // case GLFW_KEY_V: planetInfo.modifyChosenView(); break;
             case GLFW_KEY_W: camera.moveFront(-1.0); break;
             case GLFW_KEY_A: camera.moveLeft(1.0); break;
             case GLFW_KEY_S: camera.moveFront(1.0); break;
@@ -121,15 +120,13 @@ int main(int argc, char** argv) {
 
 
 void simucollision(GLFWwindow* window, glimac::FilePath applicationPath) {
-    // ClassicProgram classicObj(applicationPath);
-    // StarProgram star(applicationPath);
     PlanetProgram program(applicationPath);
     
     std::vector<GLuint> textureObjects = createTextureObjects(applicationPath.dirPath());
     std::vector<Model> models = createModels(lowConfig);
     std::vector<Planet> planets = createAllPlanets(NB_PLANETS, info.getTime());
-    std::vector<Planet> explosions;
-    unsigned int loopIdx = 0;
+    std::vector<Planet> explosions; // explosions are planets but with special interactions
+    unsigned int loopIdx = 0; // control update rate of planets
 
     while (!glfwWindowShouldClose(window)) { // main loop
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -140,10 +137,10 @@ void simucollision(GLFWwindow* window, glimac::FilePath applicationPath) {
         matrix[2] = camera.getViewMatrix();
         matrix[1] = camera.getGlobalMVMatrix(modelMatrix);
 
-        drawEverything(planets, explosions, &program, info, textureObjects, models, matrix); // main engine func
-        if(loopIdx % info.getUpdateRate() == 0) updateVisibility(&planets, info);
+        drawEverything(planets, explosions, &program, info, textureObjects, models, matrix); // main draw func
+        if(loopIdx % info.getUpdateRate() == 0) updateVisibility(&planets, info); // visibility update func
         if(!info.isPaused() && loopIdx % info.getUpdateRate() == 0) {
-            updateEverything(&planets, &explosions, &info);
+            updateEverything(&planets, &explosions, &info); // main update func
             loopIdx = 0;
         }
         

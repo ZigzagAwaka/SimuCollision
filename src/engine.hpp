@@ -35,11 +35,9 @@ struct Model {
 };
 
 
-/** Load every textures. The returned vector contains all textures is the global
- * order (see planets.hpp for the order)
+/** Load every textures. The returned vector contains all textures in the global order
  * @param binPath the path to the executable
- * @return a vector of GLuint, or every created textures
-*/
+ * @return a vector of GLuint, or every created textures */
 std::vector<GLuint> createTextureObjects(glimac::FilePath binPath);
 
 /** Load every needed models (3D objects).
@@ -54,27 +52,25 @@ std::vector<Model> createModels(bool lowConfig);
  * pointer to the allocated data of VBOs or VAOs
  * @param models vector of loaded Models
  * @param type 0 for returning VBOs data, or 1 for VAOs
- * @return a pointer in memory to the allocated data of VBO or VAO
-*/
+ * @return a pointer in memory to the allocated data of VBO or VAO */
 GLuint* getDataOfModels(std::vector<Model> models, int type);
 
-/**Create the initial planet vector.*/
+/**Create the initial planet vector*/
 std::vector<Planet> createAllPlanets(int nb, double actualTime);
 
-/** Draw every objects of the solar system (function for the MAIN LOOP)
- * @param star program structure of the sun
- * @param planet program structure of planets
- * @param classicObj program structure of the skybox and orbits
- * @param info PlanetInfo structure containing every planet data
+/** Draw every objects for the simulation
+ * @param planets vector containing every planets
+ * @param explosions vector containing every explosions (particles)
+ * @param planet opengl program structure of planets
+ * @param info Info structure containing various data, including time
  * @param textures vector containing every pre-loaded textures
- * @param models vector containing every models (sphere, circle, ...)
- * @param matrix vector containing the ProjMatrix, globalMVMatrix and viewMatrix
-*/
-void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* planet, /*ClassicProgram* classicObj,*/ Info info,
-    std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix);
+ * @param models vector containing every pre-loaded models (sphere, circle, ...)
+ * @param matrix vector containing the ProjMatrix, globalMVMatrix and viewMatrix */
+void drawEverything(std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* planet,
+    Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix);
 
 /**Update every planets parameters*/
 void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosions, Info* info);
 
-/**Update the visibility of planets*/
+/**Update the visibility (brightness) of planets when they are not loaded*/
 void updateVisibility(std::vector<Planet>* planets, Info info);

@@ -35,8 +35,24 @@ std::vector<GLuint> createTextureObjects(glimac::FilePath binPath) {
 
 
 // ============================================================
-// 3D OBJECTS
+// OPENGL FUNCTIONS
 // ============================================================
+
+/**Fill the given uniform variables
+ * Visibility is a parameter that can control the brightness of the drawn object, 1 is normal and 0 is full darkness*/
+void fillUniforms(UniformVariables u, glm::mat4 objectMVMatrix, std::vector<glm::mat4> matrix, float visibility) {
+    glUniformMatrix4fv(u.uMVPMatrix, 1, GL_FALSE, glm::value_ptr(matrix[0] * objectMVMatrix));
+    glUniformMatrix4fv(u.uMVMatrix, 1, GL_FALSE, glm::value_ptr(objectMVMatrix));
+    glUniformMatrix4fv(u.uNormalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(objectMVMatrix))));
+    glUniform1f(u.uVisibilityFactor, visibility);
+}
+
+// Activate and bind the asked texture
+void prepareTextures(int id, UniformVariables u, std::vector<GLuint> textures) {
+    glUniform1i(u.uTexture0, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textures[id]);
+}
 
 /* load vbo and vao of an object */
 void loadModel(GLsizei vertexCount, const glimac::ShapeVertex* dataPointer, GLuint* vbo, GLuint* vao) {
@@ -63,6 +79,10 @@ void loadModel(GLsizei vertexCount, const glimac::ShapeVertex* dataPointer, GLui
 }
 
 
+// ============================================================
+// 3D OBJECTS
+// ============================================================
+
 std::vector<Model> createModels(bool lowConfig) {
     std::vector<Model> models; int N = 64;
     if(lowConfig) N = 32;
@@ -73,7 +93,7 @@ std::vector<Model> createModels(bool lowConfig) {
     Model model0 = Model(vbo0, vao0, sphere.getVertexCount());
     models.push_back(model0);
 
-    glimac::Circle circle(1, N, 0); // orbits
+    glimac::Circle circle(1, N, 0); // orbits, not used in this project
     GLuint vbo1; GLuint vao1;
     loadModel(circle.getVertexCount(), circle.getDataPointer(), &vbo1, &vao1);
     Model model1 = Model(vbo1, vao1, circle.getVertexCount());
@@ -120,53 +140,9 @@ std::vector<Planet> createAllPlanets(int nb, double actualTime) {
 void addExplosion(std::vector<Planet>* explosions, double actualTime, int size, glm::vec3 position) {
     int NB = Planet::selectExplodingFragments();
     for(int n=0; n<NB; n++) {
-        explosions->push_back(createPlanet(actualTime, size, position, 37));
+        explosions->push_back(createPlanet(actualTime, size, position, 37)); // textureIdx==37 is white texture
     }
 }
-
-
-// ============================================================
-// OPENGL FUNCTIONS
-// ============================================================
-
-// Fill the given uniform variables
-// Without light if lightIndicator == 0, with light direction if lightIndicator > 0, or with star time if lightIndicator < 0
-void fillUniforms(UniformVariables u, glm::mat4 objectMVMatrix, std::vector<glm::mat4> matrix, float visibility) {
-    // if(lightIndicator > 0) {
-    //     glUniform3fv(u.uKd, 1, glm::value_ptr(glm::vec3(0.8, 0.7, 0.7)));
-    //     glUniform3fv(u.uKs, 1, glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
-    //     glUniform1f(u.uShininess, 3.0f);
-    //     glUniform3fv(u.uLightDir_vs, 1, glm::value_ptr(
-    //         glm::mat3(glm::rotate( glm::rotate(glm::mat4(1.0), glm::radians(180.0f), glm::vec3(0,1,0)), lightIndicator, glm::vec3(0,1,0) ))
-    //         * glm::mat3(matrix[2]) ));
-    //     glUniform3fv(u.uLightIntensity, 1, glm::value_ptr(glm::vec3(0.9, 0.9, 0.88)));
-    // }
-    // if(lightIndicator < 0) glUniform1f(u.uTimeSt, -1.0f * lightIndicator);
-    glUniformMatrix4fv(u.uMVPMatrix, 1, GL_FALSE, glm::value_ptr(matrix[0] * objectMVMatrix));
-    glUniformMatrix4fv(u.uMVMatrix, 1, GL_FALSE, glm::value_ptr(objectMVMatrix));
-    glUniformMatrix4fv(u.uNormalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(objectMVMatrix))));
-    glUniform1f(u.uVisibilityFactor, visibility);
-}
-
-// Activate and bind the asked texture
-void prepareTextures(int id, UniformVariables u, std::vector<GLuint> textures) {
-    glUniform1i(u.uTexture0, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[id]);
-    // if(multiple) {
-    //     glUniform1i(u.uTexture1, 1);
-    //     glActiveTexture(GL_TEXTURE1);
-    //     glBindTexture(GL_TEXTURE_2D, textures[33]); // only earthclouds (index 33), for now
-    // }
-}
-
-// Deactivate and debind multiple layers asked textures
-// void cleanMultTextures(bool multiple) {
-//     if(multiple) {
-//         glActiveTexture(GL_TEXTURE1);
-//         glBindTexture(GL_TEXTURE_2D, 0);
-//     }
-// }
 
 
 // ============================================================
@@ -177,7 +153,7 @@ void prepareTextures(int id, UniformVariables u, std::vector<GLuint> textures) {
 void drawSkybox(PlanetProgram* skybox, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     float s = 5000.0f;
     glm::mat4 sbMVMatrix = glm::scale(matrix[1], glm::vec3(s, s, s));
-    prepareTextures(36, skybox->u, textures); // skybox is index 36
+    prepareTextures(36, skybox->u, textures); // skybox texture is index 36
     fillUniforms(skybox->u, sbMVMatrix, matrix, 1);
     glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
 }
@@ -185,12 +161,9 @@ void drawSkybox(PlanetProgram* skybox, std::vector<GLuint> textures, std::vector
 // Draw the global planets hitbox
 void drawHitbox(PlanetProgram* program, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     int size = Planet::distanceMax;
-    // float d = info.distance(i);
-    // float orb_inc = info.orbital_inclination(i);
-    glm::mat4 orbMVMatrix = /*glm::rotate(matrix[1], glm::radians(orb_inc), glm::vec3(1, 0, 0));
-    orbMVMatrix =*/ glm::scale(matrix[1], glm::vec3(size, size, size));
+    glm::mat4 orbMVMatrix = glm::scale(matrix[1], glm::vec3(size, size, size));
     prepareTextures(37, program->u, textures); // color of orbit is basic white (index 37)
-    fillUniforms(program->u, orbMVMatrix, matrix, 1);
+    fillUniforms(program->u, orbMVMatrix, matrix, 1.0);
     glDrawArrays(GL_POINTS, 0, models[0].vertexCount);
 }
 
@@ -198,23 +171,14 @@ void drawHitbox(PlanetProgram* program, std::vector<GLuint> textures, std::vecto
 void drawRing(Planet planet, PlanetProgram* program, Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     glBindVertexArray(0); // debind sphere
     glBindVertexArray(models[2].vao); // bind ring
-    glm::vec3 p = /*info.distance(i)*/ planet.position;
-    float s = /*info.size(i) + info.ringSizeFactor()*/ planet.size + Planet::ringSize;
-    // float orb_speed = info.orbital_speed(i);
-    // float rot_speed = info.rotation_speed(i);
-    // glm::vec3 axis = info.inclination(i);
-    // float obli = info.obliquity(i);
+    float size = planet.size + Planet::ringSize;
     double time = info.getTime();
-    glm::mat4 ringMVMatrix = matrix[1];
-    // if(info.chosenView() != i) { // if the planet is the chosen view, dont apply these 2 transforms
-        // ringMVMatrix = glm::rotate(ringMVMatrix, float(time * orb_speed), axis);
-    ringMVMatrix = glm::translate(ringMVMatrix, /*glm::vec3(d, 0, 0)*/p);
-    // }
-    ringMVMatrix = glm::rotate(ringMVMatrix, /*obli*/ planet.obliquity, glm::vec3(1, 0, 0));
-    ringMVMatrix = glm::rotate(ringMVMatrix, float(time * /*rot_speed*/ (planet.rotationSpeed * info.getFactorSpeed())), planet.inclination /*glm::vec3(0, 1, 0)*/);
-    ringMVMatrix = glm::scale(ringMVMatrix, glm::vec3(s, s, s));
-    prepareTextures(planet.textureIdx+28, program->u, textures); // +28 in the global order to get the ring texture of the asked i planet
-    fillUniforms(program->u, ringMVMatrix, matrix, /*time * orb_speed*/ planet.visibility);
+    glm::mat4 ringMVMatrix = glm::translate(matrix[1], planet.position);
+    ringMVMatrix = glm::rotate(ringMVMatrix, planet.obliquity, glm::vec3(1, 0, 0));
+    ringMVMatrix = glm::rotate(ringMVMatrix, float(time * (planet.rotationSpeed * info.getFactorSpeed())), planet.inclination);
+    ringMVMatrix = glm::scale(ringMVMatrix, glm::vec3(size, size, size));
+    prepareTextures(planet.textureIdx+28, program->u, textures); // +28 in the global order to get the ring texture of the asked planet
+    fillUniforms(program->u, ringMVMatrix, matrix, planet.visibility);
     glDrawArrays(GL_TRIANGLES, 0, models[2].vertexCount);
     glBindVertexArray(0); // debind ring
     glBindVertexArray(models[0].vao); // bind sphere
@@ -232,19 +196,11 @@ void drawRing(Planet planet, PlanetProgram* program, Info info, std::vector<GLui
 //     glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
 // }
 
-// Draw the n.i asked explosion
+// Draw the asked explosion
 void drawExplosion(Planet explosion, PlanetProgram* program, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
-    glm::vec3 p = /*info.distance(i);*/ explosion.position;
-    float s = /*info.size(i);*/ explosion.size;
-    // float orb_speed = info.orbital_speed(i);
-    // float rot_speed = info.rotation_speed(i);
-    // glm::vec3 axis = info.inclination(i);
-    // float obli = info.obliquity(i);
-    // double time = info.getTime();
-    // bool mult = info.hasMultipleTex(i);
-    glm::mat4 explosionMVMatrix = matrix[1];
-    explosionMVMatrix = glm::translate(explosionMVMatrix, p);
-    explosionMVMatrix = glm::scale(explosionMVMatrix, glm::vec3(s, s, s));
+    float size = explosion.size;
+    glm::mat4 explosionMVMatrix = glm::translate(matrix[1], explosion.position);
+    explosionMVMatrix = glm::scale(explosionMVMatrix, glm::vec3(size, size, size));
     prepareTextures(explosion.textureIdx, program->u, textures);
     fillUniforms(program->u, explosionMVMatrix, matrix, 1.0);
     glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
@@ -252,61 +208,32 @@ void drawExplosion(Planet explosion, PlanetProgram* program, std::vector<GLuint>
 
 // Draw the n.i asked planet
 void drawPlanet(Planet planet, PlanetProgram* program, Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
-    glm::vec3 p = /*info.distance(i);*/ planet.position;
-    float s = /*info.size(i);*/ planet.size;
-    // float orb_speed = info.orbital_speed(i);
-    // float rot_speed = info.rotation_speed(i);
-    // glm::vec3 axis = info.inclination(i);
-    // float obli = info.obliquity(i);
+    float size = planet.size;
     double time = info.getTime();
-    // bool mult = info.hasMultipleTex(i);
-    glm::mat4 planetMVMatrix = matrix[1];
-    //if(info.chosenView() != i) { // if the planet is the chosen view, dont apply these 2 transforms
-    // planetMVMatrix = glm::rotate(planetMVMatrix, float(time * orb_speed), axis);
-    planetMVMatrix = glm::translate(planetMVMatrix, /*glm::vec3(d, 0, 0)*/ p);
-    //}
-    planetMVMatrix = glm::rotate(planetMVMatrix, /*obli*/ planet.obliquity, glm::vec3(1, 0, 0));
-    // planetMVMatrix = glm::rotate(planetMVMatrix, float(time * rot_speed), axis);
+    glm::mat4 planetMVMatrix = glm::translate(matrix[1], planet.position);
+    planetMVMatrix = glm::rotate(planetMVMatrix, planet.obliquity, glm::vec3(1, 0, 0));
     planetMVMatrix = glm::rotate(planetMVMatrix, float(time * (planet.rotationSpeed * info.getFactorSpeed())), planet.inclination);
-    planetMVMatrix = glm::scale(planetMVMatrix, glm::vec3(s, s, s));
-    // prepareTextures(i, program->u, textures, mult);
+    planetMVMatrix = glm::scale(planetMVMatrix, glm::vec3(size, size, size));
     prepareTextures(planet.textureIdx, program->u, textures);
-    fillUniforms(program->u, planetMVMatrix, matrix, /*time * orb_speed*/ planet.visibility);
+    fillUniforms(program->u, planetMVMatrix, matrix, planet.visibility);
     glDrawArrays(GL_TRIANGLES, 0, models[0].vertexCount);
-    // cleanMultTextures(mult); // clean cloud texture for Earth
-    if(/*info.hasRings(i)*/ planet.textureIdx == 6 || planet.textureIdx == 7) drawRing(planet, program, info, textures, models, matrix); // draw ring if applicable
+    if(planet.textureIdx == 6 || planet.textureIdx == 7) drawRing(planet, program, info, textures, models, matrix); // draw ring if applicable
 }
 
 
-void drawEverything(/*StarProgram* star,*/std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* program, /*ClassicProgram* classicObj,*/ Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
-    // int view = info.chosenView(); // get chosen view
+void drawEverything(std::vector<Planet> planets, std::vector<Planet> explosions, PlanetProgram* program,
+                    Info info, std::vector<GLuint> textures, std::vector<Model> models, std::vector<glm::mat4> matrix) {
     program->m_Program.use();
-    // if(info.drawOrbit()) {
-    //     glBindVertexArray(models[1].vao); // bind circle
-    //     for(int i=info.orbitBegin(view); i<info.orbitEnd(view); i++) { // draw orbits
-    //         drawOrbit(i, classicObj, info, textures, models, matrix);
-    //     }
-    //     glBindVertexArray(0);
-    // }
     glBindVertexArray(models[0].vao); // bind sphere
     drawSkybox(program, textures, models, matrix);
     if(info.drawHitbox()) drawHitbox(program, textures, models, matrix);
-    // if(view == 0) { // draw the sun at view 0
-    //     star->m_Program.use();
-    //     drawSun(star, info, textures, models, matrix);
-    // }
-    // planet->m_Program.use();
-    // if(view != 0) { // draw the chosen planet at view != 0
-    //     drawPlanet(view, planet, info, textures, models, matrix);
-    // }
-    //for(int i=info.orbitBegin(0); i<info.orbitEnd(0); i++) { // draw planets/moons in orbit
     for(size_t i=0; i<planets.size(); i++) {
         drawPlanet(planets[i], program, info, textures, models, matrix);
     }
     for(size_t i=0; i<explosions.size(); i++) {
         drawExplosion(explosions[i], program, textures, models, matrix);
     }
-    glBindVertexArray(0);
+    glBindVertexArray(0); // debind sphere
 }
 
 
@@ -319,7 +246,7 @@ void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosi
     for(size_t i=0; i<planets->size(); i++) {
         Planet& planet = planets->operator[](i);
         // MOVEMENT
-        if(glm::length(planet.position) > float(Planet::distanceMax)) { // hitbox
+        if(glm::length(planet.position) > float(Planet::distanceMax)) { // hitbox verif
             planet.direction = -1.0f * planet.direction;
             planet.inclination = -1.0f * planet.inclination;
         }
@@ -332,15 +259,16 @@ void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosi
         // COLLISION DETECTION
         if(!planet.hasLoaded || collideSet.find(i) != collideSet.end()) continue; // skip collision if not loaded
         for(size_t j=0; j<planets->size(); j++) {
-            if(i == j || collideSet.find(j) != collideSet.end()) continue;
+            if(i == j || collideSet.find(j) != collideSet.end()) continue; // can't collide with itself
             Planet& other = planets->operator[](j);
-            if(!other.hasLoaded) continue;
+            if(!other.hasLoaded) continue; // skip collision if not loaded
             if(planet.hasCollided(other)) { // collision detected
                 std::cout << "Collision! (" << i << ", " << j << ")" << std::endl;
                 if((planet.size > Planet::minC && other.size > Planet::minC) || (planet.size <= Planet::minC && other.size <= Planet::minC)) {
                     collideSet.insert(i);
-                    collideSet.insert(j); }
-                else collideSet.insert((planet.size <= Planet::minC ? i : j));
+                    collideSet.insert(j);
+                }
+                else collideSet.insert((planet.size <= Planet::minC ? i : j)); // special collision if very small planet collide with big planet
                 // planets->operator[]((destroyed == i) ? j : i).size *= 1.5;
             }
         }
@@ -349,29 +277,29 @@ void updateEverything(std::vector<Planet>* planets, std::vector<Planet>* explosi
     int nbC = 0; int sizeC = 0; glm::vec3 posC;
     for(auto i = collideSet.rbegin(); i != collideSet.rend(); i++) {
         auto planet = planets->begin() + *i; // get collided planet
-        if(planet->size > Planet::minC) {
+        if(planet->size > Planet::minC) { // generate new data if the planet is not too small
             if(planet->size > sizeC) sizeC = planet->size;
             posC = planet->position; nbC++; }
-        addExplosion(explosions, info->getTime(), planet->size, planet->position);
-        planets->erase(planet);
-        if(nbC == 2) { // create new planets (exploding fragments)
+        addExplosion(explosions, info->getTime(), planet->size, planet->position); // add explosion
+        planets->erase(planet); // remove collided planet
+        if(nbC == 2) { // create new data for every collision of not too small planets (2 planets in collision)
             float s = float(sizeC) / 2.0;
             nbC = 0; sizeC = 0;
             if(s < Planet::minC) continue; // only accept not too small planets
             int NB = Planet::selectExplodingFragments();
-            for(int n=0; n<NB; n++) {
+            for(int n=0; n<NB; n++) { // create new planets (exploding fragments)
                 planets->push_back(createPlanet(info->getTime(), s, posC));
             }
         }
     }
     // EXPLOSION EFFECTS
     bool fRem = false;
-    for(size_t i=0; i<explosions->size(); i++) { // explosion particles
+    for(size_t i=0; i<explosions->size(); i++) { // explosion particles movement + getting smaller
         explosions->operator[](i).position += explosions->operator[](i).direction * Planet::explosionSpeed;
         explosions->operator[](i).size /= Planet::explosionRate;
         if(!fRem && explosions->operator[](i).size <= Planet::explosionMinSize) fRem = true;
     }
-    if(fRem) explosions->erase(std::remove_if(explosions->begin(), explosions->end(),
+    if(fRem) explosions->erase(std::remove_if(explosions->begin(), explosions->end(), // remove small explosions
                 [](const Planet& e) {return e.size <= Planet::explosionMinSize;}), explosions->end());
     // SPECIAL EVENTS
     if(info->specialSpawn()) { // spawn a new planet
@@ -398,6 +326,6 @@ void updateVisibility(std::vector<Planet>* planets, Info info) {
         else planet.durationOfLoad = info.getTime(); // load not finish
         if(planet.visibility >= 1.0) planet.visibilityOp = -0.1;
         if(planet.visibility <= 0.1) planet.visibilityOp = 0.1;
-        planet.visibility += planet.visibilityOp; // flashing effect when not loaded
+        planet.visibility += planet.visibilityOp; // flashing effect when not loaded (modify visibility)
     }
 }
