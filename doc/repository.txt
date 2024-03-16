@@ -1,4 +1,6 @@
 Ledoux Johan - SimuCollision project
 
+Check README.md for any info.
+
 Code repo:
 https://github.com/ZigzagAwaka/SimuCollision
