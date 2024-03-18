@@ -26,6 +26,12 @@ Please note that warnings are expected because some external libraries are using
 > At the bottom of Vscode, choose the Launch option, and it should open the program main window.
 ```
 
+### If you have a bad CPU:
+This program can run on computers having a bad CPU and/or GPU, but you have to make some sacrifices in order to execute it properly.
+
+If the simulation is extremly laggy, collisions don't work or planets are moving very slowly, you need to remove the 2 "if" conditions at lines 141 and 142 of main.cpp (only the ifs ! not the code executed by this condition !!)
+This fix should resolve the laggy simulation but you will no longer be able to do the followings: control the speed of the simulation and pause/resume the time.
+
 ## **Usage**
 The executable should be located in a new directory called bin/.
 
