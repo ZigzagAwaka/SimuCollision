@@ -166,6 +166,7 @@ struct Info {
     bool draw_hitbox = false; // indicator to draw orbit of planets
     bool special_spawn = false; // indicator to spawn a new planet
     bool special_clean = false; // indicator to remove all small planets
+    bool badPC = false; // do you have a bad CPU?
 
     public:
     Info() {}
@@ -183,6 +184,7 @@ struct Info {
 
     /*get the rate at which update functions needs to be run*/
     int getUpdateRate() const {
+        if(badPC) return 1;
         if(f_speed == 510.0) return 100;
         return int((100.0 * 510.0 / f_speed));
     }
