@@ -3,6 +3,8 @@ Solar system collision simulation, not scientific, but is fun to watch.
 
 Collisions are detected using geometric algebra.
 
+Video demo : https://drive.google.com/file/d/1xO6BLA8tLE4NX_JKpyd7MlxsAMeW6Wh1/view?usp=sharing
+
 ## **Installation**
 Compilation is possible using Cmake, both on Windows and Linux.
 
@@ -60,7 +62,7 @@ Textures are stored in assets/textures/ and they are copied automatically to the
 
 Source files are located in the src/ folder. I also added personal source files in the glimac/src/ folder since they all use the template of the glimac library (Circle, FreeflyCamera and TrackballCamera).
 
-This project integrates the C3GA library and it's Eigen3 dependency manually. They are located in the lib/ folder.
+This project integrates the C3GA library and it's Eigen3 dependency manually. They are located in the lib/ folder. (you may need to download Eigen yourself or include it manually in the Cmakelists.txt file in order to compile without errors...)
 
 ## **Authors and acknowledgment**
 By Ledoux Johan
